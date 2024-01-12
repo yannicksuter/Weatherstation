@@ -3,7 +3,15 @@
 
 #include <Arduino.h>
 
+#define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP 60
+
+#define SERIAL_SPEED 115200  // serial baud rate
+#define PRINT_DEC_POINTS 3       // decimal points to print
+
 typedef struct sensor_data_t {
+    uint16_t bootCount;
+
     float temperature;
     float pressure;
     float humidity;
@@ -31,7 +39,6 @@ typedef struct sensor_data_t {
     float loadvoltage3;
 
 } sensor_data_t;
-
 
 inline void debugMessage(const char *format, ...)
 {

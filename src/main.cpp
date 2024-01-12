@@ -9,9 +9,6 @@
 #include "Anemometer.h"
 #include "RainGauge.h"
 
-#define SERIAL_SPEED     115200  // serial baud rate
-#define PRINT_DEC_POINTS 3       // decimal points to print
-
 #define WIND_DIR_PIN GPIO_NUM_35
 #define WIND_SPEED_PIN GPIO_NUM_33
 
@@ -23,6 +20,8 @@ S_INA3221 ina3221;
 S_BME280 bme;
 Anemometer anemometer;
 RainGauge raingauge;
+
+RTC_DATA_ATTR int bootCount = 0;
 
 void scanI2C() {
   Serial.println("Scanning I2C devices...");
@@ -58,26 +57,24 @@ void scanI2C() {
   }
 }
 
-void collectSensorData(sensor_data_t *data) {
+void printWakeupReason(){
+  esp_sleep_wakeup_cause_t wakeup_reason;
 
-}
-
-void setup() {
-  Serial.begin(SERIAL_SPEED);
-  while (!Serial);
-
-  Wire.begin();
-
-  scanI2C();
-
-  ina3221.setup(Addr_INA3221);
-  bme.setup(Addr_BME280);
-
-  anemometer.setup(WIND_DIR_PIN, WIND_SPEED_PIN);
-  raingauge.setup(Addr_s35770);
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+  switch(wakeup_reason) {
+    case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
+    case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason); break;
+  }
 }
 
 void printData(sensor_data_t *data) {
+    debugMessage("--<Data Dump>---------------------------------");
+    debugMessage("Boot count: %d", data->bootCount);
+
     debugMessage("Wind direction=%s, heading=%d°", data->wind_dir.c_str(), data->wind_heading);
     debugMessage("Wind speed: %.3f ms", data->wind_speed_ms);
     debugMessage("Rain: %.3f mm (since last reading)", data->rain);
@@ -89,14 +86,46 @@ void printData(sensor_data_t *data) {
     debugMessage("LIPO => Bus Voltage: %.3f V Shunt Voltage: %.3f mV Load Voltage: %.3f V Current: %.3f mA", data->busvoltage1, data->shuntvoltage1, data->loadvoltage1, data->current_mA1); 
     debugMessage("Solar => Bus Voltage: %.3f V Shunt Voltage: %.3f mV Load Voltage: %.3f V Current: %.3f mA", data->busvoltage2, data->shuntvoltage2, data->loadvoltage2, data->current_mA2); 
     debugMessage("Output => Bus Voltage: %.3f V Shunt Voltage: %.3f mV Load Voltage: %.3f V Current: %.3f mA", data->busvoltage3, data->shuntvoltage3, data->loadvoltage3, data->current_mA3); 
+    debugMessage("----------------------------------------------");
 }
 
-void loop() {
+void collectAndShip() {
     sensor_data_t data;
+    data.bootCount = (int)(++bootCount);
+
     ina3221.collectData(&data);
     bme.collectData(&data);
     anemometer.collectData(&data);
     raingauge.collectData(&data);
     printData(&data);
-    delay(1000);
+}
+
+void setup() {
+  Serial.begin(SERIAL_SPEED);
+  while (!Serial);
+
+  printWakeupReason();
+
+  Wire.begin();
+  // scanI2C();
+
+  // setup sensors
+  ina3221.setup(Addr_INA3221);
+  bme.setup(Addr_BME280);
+  anemometer.setup(WIND_DIR_PIN, WIND_SPEED_PIN);
+  raingauge.setup(Addr_s35770);
+
+  // read sensor data and send it to HA
+  collectAndShip();
+
+  // deep sleep
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  Serial.println("Going to sleep now");
+  delay(1000);
+  Serial.flush();
+  esp_deep_sleep_start();
+}
+
+void loop() {
+  // nothing needs to be here
 }

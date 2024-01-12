@@ -5,12 +5,12 @@
 #define OUTPUT_CHANNEL 3
 
 void S_INA3221::setup(uint8_t addr) {
-  Serial.println("Measuring voltage and current with ina3221 ...");
+  // Serial.println("Measuring voltage and current with ina3221 ...");
   ina3221.begin();
 
-  Serial.print("Manufactures ID=0x");
-  int MID = ina3221.getManufID();
-  Serial.println(MID,HEX);
+  // Serial.print("Manufactures ID=0x");
+  // int MID = ina3221.getManufID();
+  // Serial.println(MID,HEX);
 }
 
 void S_INA3221::collectData(sensor_data_t *data) {
