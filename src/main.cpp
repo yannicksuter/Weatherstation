@@ -4,12 +4,15 @@
 
 #include "sensor/S_BME280.h"
 #include "sensor/S_INA3221.h"
-#include "sensor/S_S35770.h"
 
 #include "Anemometer.h"
+#include "RainGauge.h"
 
 #define SERIAL_SPEED     115200  // serial baud rate
 #define PRINT_DEC_POINTS 3       // decimal points to print
+
+#define WIND_DIR_PIN GPIO_NUM_35
+#define WIND_SPEED_PIN GPIO_NUM_33
 
 uint8_t Addr_s35770=0x32;
 uint8_t Addr_INA3221=0x40;
@@ -17,8 +20,8 @@ uint8_t Addr_BME280=0x76;
 
 S_INA3221 ina3221;
 S_BME280 bme;
-S_S35770 s35770;
 Anemometer anemometer;
+RainGauge raingauge;
 
 void scanI2C() {
   Serial.println("Scanning I2C devices...");
@@ -62,11 +65,11 @@ void setup() {
 
   scanI2C();
 
-  s35770.setup(Addr_s35770);
   ina3221.setup(Addr_INA3221);
   bme.setup(Addr_BME280);
 
-  anemometer.setup(GPIO_NUM_35);
+  anemometer.setup(WIND_DIR_PIN, WIND_SPEED_PIN);
+  raingauge.setup(Addr_s35770);
 }
 
 void loop() {
@@ -74,7 +77,8 @@ void loop() {
   // ina3221.read();
   // s35770.read();
 
-  anemometer.readWindDirection();
-
+  // anemometer.readWindDirection();
+  // anemometer.readWindSpeed(5);
+  raingauge.read();
   delay(1000);
 }
