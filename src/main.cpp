@@ -6,6 +6,8 @@
 #include "sensor/S_INA3221.h"
 #include "sensor/S_S35770.h"
 
+#include "Anemometer.h"
+
 #define SERIAL_SPEED     115200  // serial baud rate
 #define PRINT_DEC_POINTS 3       // decimal points to print
 
@@ -16,6 +18,7 @@ uint8_t Addr_BME280=0x76;
 S_INA3221 ina3221;
 S_BME280 bme;
 S_S35770 s35770;
+Anemometer anemometer;
 
 void scanI2C() {
   Serial.println("Scanning I2C devices...");
@@ -62,11 +65,16 @@ void setup() {
   s35770.setup(Addr_s35770);
   ina3221.setup(Addr_INA3221);
   bme.setup(Addr_BME280);
+
+  anemometer.setup(GPIO_NUM_35);
 }
 
 void loop() {
-  bme.read();
-  ina3221.read();
-  s35770.read();
-  delay(5000);
+  // bme.read();
+  // ina3221.read();
+  // s35770.read();
+
+  anemometer.readWindDirection();
+
+  delay(1000);
 }
