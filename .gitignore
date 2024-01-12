@@ -1,3 +1,5 @@
+src/secrets.h
+
 # PlatformIO
 .pio/
 .pioenvs/

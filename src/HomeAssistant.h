@@ -5,28 +5,27 @@
 #include <ArduinoHA.h>
 #include <WiFi.h>
 
+#include "weather.h"
+
 class HomeAssistant {
 
 public:
-    HomeAssistant(IPAddress ipAddress, String mqttBrokerUsername,String mqttBrokerPassword);
-    ~HomeAssistant()  = default;
+    HomeAssistant();
+    ~HomeAssistant();
 
-    static void onBrightnessCommand(uint8_t brightness, HALight* sender);
-    static void onStateCommand(bool state, HALight* sender);
-    static void onRGBColorCommand(HALight::RGBColor color, HALight* sender);
-
-    bool setup();
-    void update();
-
-    void reportTemperature(float value);
+    bool publishSensorData(sensor_data_t *data);
 
 private:
     WiFiClient client;
     HADevice *_haDevice;
     HAMqtt *_mqtt;
-    // HALight *_light;
+    
     HASensorNumber *_uptimeSensor;
     HASensorNumber *_temperatureSensor;
+    HASensorNumber *_humiditySensor;
+    HASensorNumber *_pressureSensor;
+
+    HASensorNumber *_rainSensor;
 
     IPAddress _iMQTTBrokerIPAddress;
     char _sMQTTBrokerUsername[255];

@@ -2,12 +2,16 @@
 #include <Wire.h>
 #include <SPI.h>
 
+#include <esp_wifi.h>
+
 #include "sensor/S_BME280.h"
 #include "sensor/S_INA3221.h"
 
 #include "weather.h"
 #include "Anemometer.h"
 #include "RainGauge.h"
+
+#include "HomeAssistant.h"
 
 #define WIND_DIR_PIN GPIO_NUM_35
 #define WIND_SPEED_PIN GPIO_NUM_33
@@ -89,15 +93,22 @@ void printData(sensor_data_t *data) {
     debugMessage("----------------------------------------------");
 }
 
-void collectAndShip() {
-    sensor_data_t data;
-    data.bootCount = (int)(++bootCount);
+void collectData(bool publishToHA) {
+  sensor_data_t data;
+  data.bootCount = (int)(++bootCount);
 
-    ina3221.collectData(&data);
-    bme.collectData(&data);
-    anemometer.collectData(&data);
-    raingauge.collectData(&data);
-    printData(&data);
+  ina3221.collectData(&data);
+  bme.collectData(&data);
+  anemometer.collectData(&data);
+  raingauge.collectData(&data);
+
+  if (publishToHA) {
+    debugMessage("publishing...");
+    HomeAssistant homeAssistant;
+    homeAssistant.publishSensorData(&data);
+  }
+
+  printData(&data);
 }
 
 void setup() {
@@ -116,13 +127,15 @@ void setup() {
   raingauge.setup(Addr_s35770);
 
   // read sensor data and send it to HA
-  collectAndShip();
+  collectData(true);
 
   // deep sleep
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
   Serial.println("Going to sleep now");
   delay(1000);
   Serial.flush();
+  
+  esp_wifi_stop();  
   esp_deep_sleep_start();
 }
 

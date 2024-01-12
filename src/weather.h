@@ -40,6 +40,16 @@ typedef struct sensor_data_t {
 
 } sensor_data_t;
 
+inline String formatString(const char *format, ...)
+{
+	static char buffer[256];
+	va_list args;
+	va_start(args, format);
+	vsprintf(buffer, format, args);
+	va_end(args);
+	return String(buffer);
+}
+
 inline void debugMessage(const char *format, ...)
 {
 	static char buffer[256];
