@@ -3,7 +3,7 @@
 void S_S35770::setup(uint8_t addr) {
     S35770_i2caddr = addr;
 
-    reset();
+    // reset();
 }
 
 uint32_t S_S35770::readCount() {
