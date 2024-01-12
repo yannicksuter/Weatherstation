@@ -73,11 +73,16 @@ void Anemometer::setup(int dirPin, int speedPin) {
     attachInterrupt(digitalPinToInterrupt(_speedPin), pulseCounter, CHANGE);
 }
 
-void Anemometer::readWindDirection() {
+void Anemometer::collectData(sensor_data_t *data) {
+    readWindDirection(data->wind_dir, data->wind_heading);
+    readWindSpeed(10, data->wind_speed_ms, data->wind_speed_kmh);
+}
+
+void Anemometer::readWindDirection(String &dir_name, uint16_t &dir_heading) {
     int val = analogRead(_dirPin);
     
-    String dir_name = "undefined";
-    int dir_heading = -1;
+    dir_name = "undefined";
+    dir_heading = -1;
 
     // mapping based on a 10kOhm resistor 
     if (around(val, 2950, DIR_THRESHOLD)) {
@@ -112,20 +117,12 @@ void Anemometer::readWindDirection() {
         dir_name = "NW";
         dir_heading = 315;
     } 
-
-    static char strBuf[250];
-    sprintf(strBuf, "value = %d, dir=%s, heading=%d", val, dir_name.c_str(), dir_heading);
-    Serial.println(strBuf);
 }
 
-void Anemometer::readWindSpeed(int sampling_time_s) {
+void Anemometer::readWindSpeed(int sampling_time_s, float &wind_speed_ms, float &wind_speed_kmh) {
     sensor_count_ = 0;
     delay(1000*sampling_time_s);
 
-    float wind_speed_ms = (1.492 * sensor_count_) / (float)sampling_time_s;
-    float wind_speed_kmh = wind_speed_ms * 3.6;
-
-    static char strBuf[250];
-    sprintf(strBuf, "speed: %f ms", wind_speed_ms);
-    Serial.println(strBuf);
+    wind_speed_ms = (1.492 * sensor_count_) / (float)sampling_time_s;
+    wind_speed_kmh = wind_speed_ms * 3.6;
 }

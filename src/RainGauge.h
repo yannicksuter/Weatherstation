@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <SPI.h>
 
+#include "weather.h"
 #include "sensor/S_S35770.h"
 
 class RainGauge {
@@ -13,7 +14,7 @@ class RainGauge {
         ~RainGauge() = default;
 
         void setup(uint8_t addr);
-        void read();
+        void collectData(sensor_data_t *data);
 
     private:
         S_S35770 s35770;

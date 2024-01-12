@@ -13,18 +13,8 @@ void S_BME280::setup(uint8_t addr) {
   }
 }
 
-void S_BME280::read() {
-  Serial.print("Temperature = ");
-  Serial.print(bme.readTemperature());
-  Serial.println(" °C");
-
-  Serial.print("Pressure = ");
-  Serial.print(bme.readPressure() / 100.0F);
-  Serial.println(" hPa");
-
-  Serial.print("Humidity = ");
-  Serial.print(bme.readHumidity());
-  Serial.println(" %");
-
-  Serial.println();
+void S_BME280::collectData(sensor_data_t *data) {
+  data->temperature = bme.readTemperature();
+  data->pressure = bme.readPressure() / 100.0F;
+  data->humidity = bme.readHumidity();
 }

@@ -5,6 +5,7 @@
 #include "sensor/S_BME280.h"
 #include "sensor/S_INA3221.h"
 
+#include "weather.h"
 #include "Anemometer.h"
 #include "RainGauge.h"
 
@@ -57,6 +58,10 @@ void scanI2C() {
   }
 }
 
+void collectSensorData(sensor_data_t *data) {
+
+}
+
 void setup() {
   Serial.begin(SERIAL_SPEED);
   while (!Serial);
@@ -72,13 +77,26 @@ void setup() {
   raingauge.setup(Addr_s35770);
 }
 
-void loop() {
-  // bme.read();
-  // ina3221.read();
-  // s35770.read();
+void printData(sensor_data_t *data) {
+    debugMessage("Wind direction=%s, heading=%d°", data->wind_dir.c_str(), data->wind_heading);
+    debugMessage("Wind speed: %.3f ms", data->wind_speed_ms);
+    debugMessage("Rain: %.3f mm (since last reading)", data->rain);
 
-  // anemometer.readWindDirection();
-  // anemometer.readWindSpeed(5);
-  raingauge.read();
-  delay(1000);
+    debugMessage("Temperatur: %.3f °C", data->temperature);
+    debugMessage("Pressure: %.3f hPa", data->pressure);
+    debugMessage("Humidity: %.3f %%", data->humidity);
+
+    debugMessage("LIPO => Bus Voltage: %.3f V Shunt Voltage: %.3f mV Load Voltage: %.3f V Current: %.3f mA", data->busvoltage1, data->shuntvoltage1, data->loadvoltage1, data->current_mA1); 
+    debugMessage("Solar => Bus Voltage: %.3f V Shunt Voltage: %.3f mV Load Voltage: %.3f V Current: %.3f mA", data->busvoltage2, data->shuntvoltage2, data->loadvoltage2, data->current_mA2); 
+    debugMessage("Output => Bus Voltage: %.3f V Shunt Voltage: %.3f mV Load Voltage: %.3f V Current: %.3f mA", data->busvoltage3, data->shuntvoltage3, data->loadvoltage3, data->current_mA3); 
+}
+
+void loop() {
+    sensor_data_t data;
+    ina3221.collectData(&data);
+    bme.collectData(&data);
+    anemometer.collectData(&data);
+    raingauge.collectData(&data);
+    printData(&data);
+    delay(1000);
 }
