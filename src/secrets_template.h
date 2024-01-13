@@ -1,3 +1,5 @@
+// Duplicate this file and give it the name secrets.h. Modify the values of each variable in order to configure access to your network and MQTT broker.
+
 #ifndef SECRETS_H
 #define SECRETS_H
 

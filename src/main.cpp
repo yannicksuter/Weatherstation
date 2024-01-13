@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <SPI.h>
 
+#include <driver/adc.h>
 #include <esp_wifi.h>
 
 #include "sensor/S_BME280.h"
@@ -13,6 +14,7 @@
 
 #include "HomeAssistant.h"
 
+#define ONBOARD_LED GPIO_NUM_2
 #define WIND_DIR_PIN GPIO_NUM_35
 #define WIND_SPEED_PIN GPIO_NUM_33
 
@@ -115,8 +117,15 @@ void setup() {
   Serial.begin(SERIAL_SPEED);
   while (!Serial);
 
+  // activate onboard LED to show SOC is active
+  pinMode(ONBOARD_LED, OUTPUT);
+  digitalWrite(ONBOARD_LED, HIGH);
+
+  // log wakeup reason from deepsleep
   printWakeupReason();
 
+  // setup peripherials
+  adc_power_acquire();
   Wire.begin();
   // scanI2C();
 
@@ -131,11 +140,15 @@ void setup() {
 
   // deep sleep
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  
+  // power down ESP and enter deepsleep
   Serial.println("Going to sleep now");
   delay(1000);
   Serial.flush();
-  
   esp_wifi_stop();  
+  adc_power_release();
+  digitalWrite(ONBOARD_LED, LOW);
+
   esp_deep_sleep_start();
 }
 
