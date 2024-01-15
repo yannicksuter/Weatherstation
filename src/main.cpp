@@ -139,7 +139,7 @@ void setup() {
   collectData(true);
 
   // deep sleep
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  esp_sleep_enable_timer_wakeup(DEEPSLEEP_SECS * uS_TO_S_FACTOR);
   
   // power down ESP and enter deepsleep
   Serial.println("Going to sleep now");

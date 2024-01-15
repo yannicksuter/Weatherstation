@@ -24,8 +24,23 @@ private:
     HASensorNumber *_temperatureSensor;
     HASensorNumber *_humiditySensor;
     HASensorNumber *_pressureSensor;
-
+    HASensor *_windDirSensor;
+    HASensorNumber *_windHeadingSensor;
+    HASensorNumber *_windSpeedSensor;
     HASensorNumber *_rainSensor;
+
+    HASensorNumber *_lipoBusVoltageSensor;
+    HASensorNumber *_lipoShuntVoltageSensor;
+    HASensorNumber *_lipoLoadVoltageSensor;
+    HASensorNumber *_lipoCurrentSensor;
+    HASensorNumber *_solarBusVoltageSensor;
+    HASensorNumber *_solarShuntVoltageSensor;
+    HASensorNumber *_solarLoadVoltageSensor;
+    HASensorNumber *_solarCurrentSensor;
+    HASensorNumber *_outputBusVoltageSensor;
+    HASensorNumber *_outputShuntVoltageSensor;
+    HASensorNumber *_outputLoadVoltageSensor;
+    HASensorNumber *_outputCurrentSensor;
 
     IPAddress _iMQTTBrokerIPAddress;
     char _sMQTTBrokerUsername[255];

@@ -2,9 +2,6 @@ This repository contains the source code for a weather monitoring system impleme
 
 #Todo
 - reset s35770 internal counter on first bootup (just to be sure it always starts at 0)
-- adding power monitoring to HA metrics
-- adding wind direction and speed monitoring to HA metrics
-- refactor HAInterface to make metrics-channel creation simpler (less redundant code..), maybe with a registry
 - attach solar panels
 - casing, CAD parts and outlet
 - maybe 2 solarpanel sections (east-west) to double recharge capacity

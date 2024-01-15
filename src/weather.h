@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP 60
+#define DEEPSLEEP_SECS (10*60)
 
 #define SERIAL_SPEED 115200  // serial baud rate
 #define PRINT_DEC_POINTS 3       // decimal points to print

@@ -8,5 +8,6 @@ const char* wifi_password =  "your_wifi_password";
 
 const char* mqtt_user = "your_mqtt_user"; 
 const char* mqtt_password = "your_mqtt_password"; 
+const char* mqtt_brokerIP = "192.168.1.56"; 
 
 #endif
