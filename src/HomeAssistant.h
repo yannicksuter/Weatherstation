@@ -13,18 +13,23 @@ public:
     HomeAssistant();
     ~HomeAssistant();
 
+    bool connect();
+    bool disconnect();
+
     bool publishSensorData(sensor_data_t *data);
 
 private:
     WiFiClient client;
     HADevice *_haDevice;
     HAMqtt *_mqtt;
+    String _haDeviceSerial;
     
-    HASensorNumber *_uptimeSensor;
+    HASensorNumber *_bootCounterSensor;
     HASensorNumber *_temperatureSensor;
     HASensorNumber *_humiditySensor;
     HASensorNumber *_pressureSensor;
     HASensor *_windDirSensor;
+    HASensor *_windScaleSensor;
     HASensorNumber *_windHeadingSensor;
     HASensorNumber *_windSpeedSensor;
     HASensorNumber *_rainSensor;

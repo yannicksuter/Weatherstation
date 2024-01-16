@@ -95,6 +95,8 @@ void printData(sensor_data_t *data) {
     debugMessage("----------------------------------------------");
 }
 
+HomeAssistant homeAssistant;
+
 void collectData(bool publishToHA) {
   sensor_data_t data;
   data.bootCount = (int)(++bootCount);
@@ -106,7 +108,6 @@ void collectData(bool publishToHA) {
 
   if (publishToHA) {
     debugMessage("publishing...");
-    HomeAssistant homeAssistant;
     homeAssistant.publishSensorData(&data);
   }
 
@@ -135,6 +136,11 @@ void setup() {
   anemometer.setup(WIND_DIR_PIN, WIND_SPEED_PIN);
   raingauge.setup(Addr_s35770);
 
+  // HA setup
+  if (!homeAssistant.connect()) {
+    debugMessage("Error connecting to MQTT broker.");
+  }
+
   // read sensor data and send it to HA
   collectData(true);
 
@@ -153,5 +159,6 @@ void setup() {
 }
 
 void loop() {
-  // nothing needs to be here
+  // collectData(true);
+  // delay(10000);
 }
