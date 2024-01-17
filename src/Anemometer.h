@@ -12,7 +12,7 @@ class Anemometer {
         void collectData(sensor_data_t *data);
 
     private:
-        void readWindDirection(String &dir_name, uint16_t &dir_heading);
+        void readWindDirection(String &dir_name, uint16_t &dir_heading, uint16_t &dir_adc);
         void readWindSpeed(int sampling_time_s, float &wind_speed_ms, float &wind_speed_kmh);
 
         int _dirPin;

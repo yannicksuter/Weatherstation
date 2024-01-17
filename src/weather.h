@@ -10,14 +10,17 @@
 #define PRINT_DEC_POINTS 3       // decimal points to print
 
 typedef struct sensor_data_t {
-    uint16_t bootCount;
+    uint16_t boot_count;
 
     float temperature;
     float pressure;
     float humidity;
 
     String wind_dir;
+    uint16_t wind_dir_adc;
     uint16_t wind_heading;
+    uint16_t wind_scale_code;
+    String wind_scale;
     float wind_speed_ms;
     float wind_speed_kmh;
     

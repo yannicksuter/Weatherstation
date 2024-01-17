@@ -2,8 +2,9 @@
 #include <Wire.h>
 #include <SPI.h>
 
-#include <driver/adc.h>
-#include <esp_wifi.h>
+// #define ENABLE_SERIAL_DEBUG
+
+#include "LowPower.h"
 
 #include "sensor/S_BME280.h"
 #include "sensor/S_INA3221.h"
@@ -29,60 +30,14 @@ RainGauge raingauge;
 
 RTC_DATA_ATTR int bootCount = 0;
 
-void scanI2C() {
-  Serial.println("Scanning I2C devices...");
-
-  byte error, address;
-  int devicesCount = 0;
-
-  for (address = 1; address < 127; address++) {
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
-
-    if (error == 0) {
-      Serial.print("I2C device found at address 0x");
-      if (address < 16) {
-        Serial.print("0");
-      }
-      Serial.print(address, HEX);
-      Serial.println(" !");
-      devicesCount++;
-    } else if (error == 4) {
-      Serial.print("Unknown error at address 0x");
-      if (address < 16) {
-        Serial.print("0");
-      }
-      Serial.println(address, HEX);
-    }
-  }
-
-  if (devicesCount == 0) {
-    Serial.println("No I2C devices found");
-  } else {
-    Serial.println("Scan complete");
-  }
-}
-
-void printWakeupReason(){
-  esp_sleep_wakeup_cause_t wakeup_reason;
-
-  wakeup_reason = esp_sleep_get_wakeup_cause();
-  switch(wakeup_reason) {
-    case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
-    case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
-    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
-    case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
-    case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
-    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason); break;
-  }
-}
-
 void printData(sensor_data_t *data) {
     debugMessage("--<Data Dump>---------------------------------");
-    debugMessage("Boot count: %d", data->bootCount);
+    debugMessage("Boot count: %d", data->boot_count);
 
-    debugMessage("Wind direction=%s, heading=%d°", data->wind_dir.c_str(), data->wind_heading);
-    debugMessage("Wind speed: %.3f ms", data->wind_speed_ms);
+    debugMessage("Wind direction=%s, heading=%d° (adc: %d)", data->wind_dir.c_str(), data->wind_heading, data->wind_dir_adc);
+    debugMessage("Wind speed: %.3f m/s", data->wind_speed_ms);
+    debugMessage("Wind speed: %.3f km/h", data->wind_speed_kmh);
+    debugMessage("Wind scale: %s (%d)", data->wind_scale, data->wind_scale_code);
     debugMessage("Rain: %.3f mm (since last reading)", data->rain);
 
     debugMessage("Temperatur: %.3f °C", data->temperature);
@@ -97,26 +52,22 @@ void printData(sensor_data_t *data) {
 
 HomeAssistant homeAssistant;
 
-void collectData(bool publishToHA) {
-  sensor_data_t data;
-  data.bootCount = (int)(++bootCount);
+void collectData(sensor_data_t &data) {
+  data.boot_count = (int)(++bootCount);
 
   ina3221.collectData(&data);
   bme.collectData(&data);
   anemometer.collectData(&data);
   raingauge.collectData(&data);
 
-  if (publishToHA) {
-    debugMessage("publishing...");
-    homeAssistant.publishSensorData(&data);
-  }
-
   printData(&data);
 }
 
 void setup() {
+#ifdef ENABLE_SERIAL_DEBUG  
   Serial.begin(SERIAL_SPEED);
   while (!Serial);
+#endif
 
   // activate onboard LED to show SOC is active
   pinMode(ONBOARD_LED, OUTPUT);
@@ -136,29 +87,21 @@ void setup() {
   anemometer.setup(WIND_DIR_PIN, WIND_SPEED_PIN);
   raingauge.setup(Addr_s35770);
 
+  // read sensor data and send it to HA
+  sensor_data_t data;
+  collectData(data);
+
   // HA setup
-  if (!homeAssistant.connect()) {
-    debugMessage("Error connecting to MQTT broker.");
+  if (homeAssistant.connect()) {
+    debugMessage("Publishing data to MQTT broker.");
+    homeAssistant.publishSensorData(&data);
   }
 
-  // read sensor data and send it to HA
-  collectData(true);
-
-  // deep sleep
-  esp_sleep_enable_timer_wakeup(DEEPSLEEP_SECS * uS_TO_S_FACTOR);
-  
-  // power down ESP and enter deepsleep
-  Serial.println("Going to sleep now");
-  delay(1000);
-  Serial.flush();
-  esp_wifi_stop();  
-  adc_power_release();
+  // enter low power mode
   digitalWrite(ONBOARD_LED, LOW);
-
-  esp_deep_sleep_start();
+  deepSleep(DEEPSLEEP_SECS);
 }
 
 void loop() {
-  // collectData(true);
-  // delay(10000);
+  // nothing needed here...
 }

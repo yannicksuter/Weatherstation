@@ -29,7 +29,9 @@ private:
     HASensorNumber *_humiditySensor;
     HASensorNumber *_pressureSensor;
     HASensor *_windDirSensor;
+    HASensorNumber *_windDirADCSensor;
     HASensor *_windScaleSensor;
+    HASensorNumber *_windScaleCodeSensor;
     HASensorNumber *_windHeadingSensor;
     HASensorNumber *_windSpeedSensor;
     HASensorNumber *_rainSensor;

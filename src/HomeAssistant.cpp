@@ -1,13 +1,6 @@
 #include "HomeAssistant.h"
 #include "secrets.h"
 
-const char* mqtt_deviceclass_none = "none"; 
-
-// byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};
-// WiFiClient client;
-// HADevice device(mac, sizeof(mac));
-// HAMqtt mqtt(client, device, 32);
-
 uint16_t getSerial() {
     uint64_t addr = ESP.getEfuseMac();
     uint8_t serial[8];
@@ -23,7 +16,6 @@ uint16_t getSerial() {
 HomeAssistant::HomeAssistant() {
     strcpy(_sMQTTBrokerUsername, mqtt_user);
     strcpy(_sMQTTBrokerPassword, mqtt_password);
-    // _iMQTTBrokerIPAddress = IPAddress(192,168,1,56);
     _iMQTTBrokerIPAddress.fromString(mqtt_brokerIP);
 
     _lastUptimeUpdateAt = 0;
@@ -38,7 +30,9 @@ HomeAssistant::HomeAssistant() {
     _humiditySensor = nullptr;
     _pressureSensor = nullptr;
     _windDirSensor = nullptr;
+    _windDirADCSensor = nullptr;
     _windScaleSensor = nullptr;
+    _windScaleCodeSensor = nullptr;
     _windSpeedSensor = nullptr;
     _windHeadingSensor = nullptr;
     _windSpeedSensor = nullptr;
@@ -67,7 +61,9 @@ HomeAssistant::~HomeAssistant() {
     delete _humiditySensor;
     delete _pressureSensor;
     delete _windDirSensor;
+    delete _windDirADCSensor;
     delete _windScaleSensor;
+    delete _windScaleCodeSensor;
     delete _windHeadingSensor;
     delete _windSpeedSensor;
     delete _rainSensor;
@@ -134,8 +130,10 @@ bool HomeAssistant::connect() {
     _humiditySensor = createSensorNumber("ws_humidity", "Humidity", HASensorNumber::PrecisionP2, "mdi:water-percent", "%");
     _pressureSensor = createSensorNumber("ws_pressure", "Pressure", HASensorNumber::PrecisionP2, "mdi:gauge", "hPa");
     _windDirSensor = createSensorText("ws_winddir", "Wind Direction", "mdi:eye");
-    _windScaleSensor = createSensorText("ws_windscale", "Wind Scale", "mdi:windsock");
+    _windDirADCSensor = createSensorNumber("ws_winddir_adc", "Wind Direction ADC", HASensorNumber::PrecisionP0, "mdi:eye", "");
     _windHeadingSensor = createSensorNumber("ws_windheading", "Wind Heading", HASensorNumber::PrecisionP2, "mdi:eye", "deg");
+    _windScaleSensor = createSensorText("ws_windscale", "Wind Scale", "mdi:windsock");
+    _windScaleCodeSensor = createSensorNumber("ws_windscale_code", "Wind Scale Code", HASensorNumber::PrecisionP0, "mdi:windsock", "");
     _windSpeedSensor = createSensorNumber("ws_windspeed", "Wind Speed", HASensorNumber::PrecisionP2, "mdi:weather-windy", "m/s");
 
     _lipoBusVoltageSensor = createSensorNumber("ws_lipobusvoltage", "Lipo: Bus Voltage", HASensorNumber::PrecisionP2, "mdi:sine-wave", "V");
@@ -168,15 +166,17 @@ bool HomeAssistant::disconnect() {
 bool HomeAssistant::publishSensorData(sensor_data_t *data) {
     _mqtt->loop();
     
-    _bootCounterSensor->setValue(data->bootCount);
+    _bootCounterSensor->setValue(data->boot_count);
     _temperatureSensor->setValue((float)data->temperature, true);
     _humiditySensor->setValue((float)data->humidity, true);
     _pressureSensor->setValue((float)data->pressure, true);   
     _rainSensor->setValue((float)data->rain, true);
     _windDirSensor->setValue(data->wind_dir.c_str());
-    _windScaleSensor->setValue("Light Breeze");
+    _windDirADCSensor->setValue(data->wind_dir_adc);
     _windHeadingSensor->setValue(data->wind_heading, true);
     _windSpeedSensor->setValue((float)data->wind_speed_ms, true);
+    _windScaleSensor->setValue(data->wind_scale.c_str());
+    _windScaleCodeSensor->setValue(data->wind_scale_code);
 
     _lipoBusVoltageSensor->setValue((float)data->busvoltage1, true);
     _lipoShuntVoltageSensor->setValue((float)data->shuntvoltage1, true);
